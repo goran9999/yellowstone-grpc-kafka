@@ -22,7 +22,7 @@ futures = "0.3.24"
 http = { version = "1.1.0", optional = true }
 http-body-util = { version = "0.1.2", optional = true }
 hyper = { version = "1.4.1", optional = true }
-hyper-util = { version = "0.1.7", optional = true }
+hyper-util = { version = "0.1.7", optional = true, features = ['full'] }
 json5 = "0.4.1"
 lazy_static = { version = "1.4.0", optional = true }
 prometheus = { version = "0.13.2", optional = true }
@@ -30,20 +30,33 @@ serde = "1.0.145"
 serde_json = "1.0.86"
 serde_yaml = "0.9.25"
 sha2 = { version = "0.10.7", optional = true }
-tokio = { version = "1.21.2", features = ["rt-multi-thread", "fs", "signal", "time", "macros"] }
+tokio = { version = "1.21.2", features = [
+    "rt-multi-thread",
+    "fs",
+    "signal",
+    "time",
+    "macros",
+] }
 tokio-stream = { version = "0.1.11", optional = true }
-tonic = { version = "0.12.1", features = ["gzip", "zstd", "tls", "tls-roots"], optional = true }
-tonic-health = { version = "0.12.1", optional = true }
+tonic = { version = "0.10.2", features = [
+    "gzip",
+    "tls",
+    "tls-roots",
+], optional = true }
+tonic-health = { version = "0.10.2", optional = true }
 tracing = { version = "0.1.37", optional = true }
 tracing-subscriber = { version = "0.3.17", features = ["env-filter"] }
-yellowstone-grpc-client = { version = "6.0.0", optional = true }
-yellowstone-grpc-proto = "6.0.0"
+yellowstone-grpc-client = { version = "1.14.2", optional = true }
+yellowstone-grpc-proto = "1.14.2"
 
 [target.'cfg(not(all(target_os = "macos", target_arch = "aarch64")))'.dependencies]
 rdkafka = { version = "0.36.2", features = ["sasl", "ssl"], optional = true }
 
 [target.'cfg(all(target_os = "macos", target_arch = "aarch64"))'.dependencies]
-rdkafka = { version = "0.36.2", features = ["sasl", "ssl-vendored"], optional = true }
+rdkafka = { version = "0.36.2", features = [
+    "sasl",
+    "ssl-vendored",
+], optional = true }
 
 [build-dependencies]
 anyhow = "1.0.62"
@@ -53,8 +66,27 @@ vergen = { version = "9.0.0", features = ["build", "rustc"] }
 
 [features]
 default = ["kafka"]
-kafka = ["metrics", "async-trait", "clap", "const-hex", "rdkafka", "sha2", "tokio-stream", "tonic", "tonic-health", "yellowstone-grpc-client"]
-metrics = ["http", "http-body-util", "hyper", "hyper-util", "lazy_static", "prometheus", "tracing"]
+kafka = [
+    "metrics",
+    "async-trait",
+    "clap",
+    "const-hex",
+    "rdkafka",
+    "sha2",
+    "tokio-stream",
+    "tonic",
+    "tonic-health",
+    "yellowstone-grpc-client",
+]
+metrics = [
+    "http",
+    "http-body-util",
+    "hyper",
+    "hyper-util",
+    "lazy_static",
+    "prometheus",
+    "tracing",
+]
 
 [lints.clippy]
 clone_on_ref_ptr = "deny"

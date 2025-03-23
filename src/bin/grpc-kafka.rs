@@ -232,7 +232,7 @@ impl ArgsAction {
             .x_token(config.x_token)?
             .connect_timeout(Duration::from_secs(10))
             .timeout(Duration::from_secs(5))
-            .tls_config(ClientTlsConfig::new().with_native_roots())?
+            .tls_config(ClientTlsConfig::new())?
             .connect()
             .await?;
         let mut geyser = client.subscribe_once(config.request.to_proto()).await?;

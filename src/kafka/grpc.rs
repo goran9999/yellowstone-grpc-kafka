@@ -7,7 +7,6 @@ use {
             atomic::{AtomicUsize, Ordering},
             Arc,
         },
-        time::SystemTime,
     },
     tokio::{
         sync::{broadcast, mpsc, Notify},
@@ -69,10 +68,7 @@ impl GrpcService {
             broadcast_tx: broadcast_tx.clone(),
         })
         .accept_compressed(CompressionEncoding::Gzip)
-        .send_compressed(CompressionEncoding::Gzip)
-        .accept_compressed(CompressionEncoding::Zstd)
-        .send_compressed(CompressionEncoding::Zstd);
-
+        .send_compressed(CompressionEncoding::Gzip);
         let shutdown = Arc::new(Notify::new());
         let shutdown_grpc = Arc::clone(&shutdown);
 
@@ -126,7 +122,7 @@ impl Geyser for GrpcService {
                         let ping_msg = SubscribeUpdate {
                             filters: vec![],
                             update_oneof: Some(UpdateOneof::Ping(SubscribeUpdatePing {})),
-                            created_at: Some(SystemTime::now().into()),
+
                         };
 
                         match ping_stream_tx.try_send(Ok(ping_msg)) {

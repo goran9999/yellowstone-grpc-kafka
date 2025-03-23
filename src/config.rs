@@ -9,11 +9,8 @@ use {
     tokio::fs,
     yellowstone_grpc_proto::prelude::{
         subscribe_request_filter_accounts_filter::Filter as AccountsFilterDataOneof,
-        subscribe_request_filter_accounts_filter_lamports::Cmp as AccountsFilterLamports,
-        subscribe_request_filter_accounts_filter_memcmp::Data as AccountsFilterMemcmpOneof,
         CommitmentLevel, SubscribeRequest, SubscribeRequestAccountsDataSlice,
         SubscribeRequestFilterAccounts, SubscribeRequestFilterAccountsFilter,
-        SubscribeRequestFilterAccountsFilterLamports, SubscribeRequestFilterAccountsFilterMemcmp,
         SubscribeRequestFilterBlocks, SubscribeRequestFilterSlots,
         SubscribeRequestFilterTransactions,
     },
@@ -82,7 +79,6 @@ impl GrpcRequestToProto<SubscribeRequest> for ConfigGrpcRequest {
             commitment: self.commitment.map(|v| v.to_proto() as i32),
             accounts_data_slice: ConfigGrpcRequest::vec_to_proto(self.accounts_data_slice),
             ping: None,
-            from_slot: self.from_slot,
         }
     }
 }
@@ -98,7 +94,6 @@ impl GrpcRequestToProto<SubscribeRequestFilterSlots> for ConfigGrpcRequestSlots 
     fn to_proto(self) -> SubscribeRequestFilterSlots {
         SubscribeRequestFilterSlots {
             filter_by_commitment: self.filter_by_commitment,
-            interslot_updates: self.interslot_updates,
         }
     }
 }
@@ -118,7 +113,6 @@ impl GrpcRequestToProto<SubscribeRequestFilterAccounts> for ConfigGrpcRequestAcc
             account: self.account,
             owner: self.owner,
             filters: self.filters.into_iter().map(|f| f.to_proto()).collect(),
-            nonempty_txn_signature: self.nonempty_txn_signature,
         }
     }
 }
@@ -135,38 +129,10 @@ impl GrpcRequestToProto<SubscribeRequestFilterAccountsFilter> for ConfigGrpcRequ
     fn to_proto(self) -> SubscribeRequestFilterAccountsFilter {
         SubscribeRequestFilterAccountsFilter {
             filter: Some(match self {
-                ConfigGrpcRequestAccountsFilter::Memcmp { offset, base58 } => {
-                    AccountsFilterDataOneof::Memcmp(SubscribeRequestFilterAccountsFilterMemcmp {
-                        offset,
-                        data: Some(AccountsFilterMemcmpOneof::Base58(base58)),
-                    })
-                }
                 ConfigGrpcRequestAccountsFilter::DataSize(size) => {
                     AccountsFilterDataOneof::Datasize(size)
                 }
-                ConfigGrpcRequestAccountsFilter::TokenAccountState => {
-                    AccountsFilterDataOneof::TokenAccountState(true)
-                }
-                ConfigGrpcRequestAccountsFilter::Lamports(lamports) => {
-                    AccountsFilterDataOneof::Lamports(
-                        SubscribeRequestFilterAccountsFilterLamports {
-                            cmp: Some(match lamports {
-                                ConfigGrpcRequestAccountsFilterLamports::Eq(value) => {
-                                    AccountsFilterLamports::Eq(value)
-                                }
-                                ConfigGrpcRequestAccountsFilterLamports::Ne(value) => {
-                                    AccountsFilterLamports::Ne(value)
-                                }
-                                ConfigGrpcRequestAccountsFilterLamports::Lt(value) => {
-                                    AccountsFilterLamports::Lt(value)
-                                }
-                                ConfigGrpcRequestAccountsFilterLamports::Gt(value) => {
-                                    AccountsFilterLamports::Gt(value)
-                                }
-                            }),
-                        },
-                    )
-                }
+                _ => AccountsFilterDataOneof::TokenAccountState(true),
             }),
         }
     }
