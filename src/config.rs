@@ -101,10 +101,10 @@ impl GrpcRequestToProto<SubscribeRequestFilterSlots> for ConfigGrpcRequestSlots 
 #[derive(Debug, Default, Clone, Deserialize, Serialize)]
 #[serde(default)]
 pub struct ConfigGrpcRequestAccounts {
-    account: Vec<String>,
-    owner: Vec<String>,
-    filters: Vec<ConfigGrpcRequestAccountsFilter>,
-    nonempty_txn_signature: Option<bool>,
+    pub account: Vec<String>,
+    pub owner: Vec<String>,
+    pub filters: Vec<ConfigGrpcRequestAccountsFilter>,
+    pub nonempty_txn_signature: Option<bool>,
 }
 
 impl GrpcRequestToProto<SubscribeRequestFilterAccounts> for ConfigGrpcRequestAccounts {
