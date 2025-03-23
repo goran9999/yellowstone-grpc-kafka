@@ -16,6 +16,9 @@ pub struct KafkaDedupMemory {
     inner: Arc<Mutex<BTreeMap<u64, HashSet<[u8; 32]>>>>,
 }
 
+#[derive(Debug, Default, Clone)]
+pub struct KafkaDedupRedis {}
+
 #[async_trait::async_trait]
 impl KafkaDedup for KafkaDedupMemory {
     async fn allowed(&self, slot: u64, hash: [u8; 32]) -> bool {

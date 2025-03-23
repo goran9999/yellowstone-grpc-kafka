@@ -1,16 +1,15 @@
 use {
     anyhow::Context,
-    clap::{Parser, Subcommand},
     futures::{future::BoxFuture, stream::StreamExt},
     rdkafka::{config::ClientConfig, consumer::Consumer, message::Message, producer::FutureRecord},
     sha2::{Digest, Sha256},
-    std::{net::SocketAddr, sync::Arc, time::Duration},
+    std::{sync::Arc, time::Duration},
     tokio::task::JoinSet,
     tonic::transport::ClientTlsConfig,
     tracing::{debug, trace, warn},
     yellowstone_grpc_client::GeyserGrpcClient,
     yellowstone_grpc_kafka::{
-        config::{load as config_load, GrpcRequestToProto},
+        config::GrpcRequestToProto,
         create_shutdown,
         kafka::{
             config::{Config, ConfigDedup, ConfigGrpc2Kafka, ConfigKafka2Grpc},
@@ -18,8 +17,7 @@ use {
             grpc::GrpcService,
             metrics,
         },
-        metrics::{run_server as prometheus_run_server, GprcMessageKind},
-        setup_tracing,
+        metrics::GprcMessageKind,
     },
     yellowstone_grpc_proto::{
         prelude::{subscribe_update::UpdateOneof, SubscribeUpdate},
@@ -27,50 +25,30 @@ use {
     },
 };
 
-#[derive(Debug, Clone, Parser)]
-#[clap(author, version, about = "Yellowstone gRPC Kafka Tool")]
-struct Args {
-    /// Path to config file
-    #[clap(short, long)]
-    config: String,
-
-    /// Prometheus listen address
-    #[clap(long)]
-    prometheus: Option<SocketAddr>,
-
-    #[command(subcommand)]
-    action: ArgsAction,
-}
-
-#[derive(Debug, Clone, Subcommand)]
-enum ArgsAction {
-    /// Receive data from Kafka, deduplicate and send them back to Kafka
+#[derive(Debug, Clone)]
+pub enum GrpcKafka {
     Dedup,
-    /// Receive data from gRPC and send them to the Kafka
-    #[command(name = "grpc2kafka")]
     Grpc2Kafka,
-    /// Receive data from Kafka and send them over gRPC
-    #[command(name = "kafka2grpc")]
     Kafka2Grpc,
 }
 
-impl ArgsAction {
-    async fn run(self, config: Config, kafka_config: ClientConfig) -> anyhow::Result<()> {
+impl GrpcKafka {
+    pub async fn run(self, config: Config, kafka_config: ClientConfig) -> anyhow::Result<()> {
         let shutdown = create_shutdown()?;
         match self {
-            ArgsAction::Dedup => {
+            GrpcKafka::Dedup => {
                 let config = config.dedup.ok_or_else(|| {
                     anyhow::anyhow!("`dedup` section in config should be defined")
                 })?;
                 Self::dedup(kafka_config, config, shutdown).await
             }
-            ArgsAction::Grpc2Kafka => {
+            GrpcKafka::Grpc2Kafka => {
                 let config = config.grpc2kafka.ok_or_else(|| {
                     anyhow::anyhow!("`grpc2kafka` section in config should be defined")
                 })?;
                 Self::grpc2kafka(kafka_config, config, shutdown).await
             }
-            ArgsAction::Kafka2Grpc => {
+            GrpcKafka::Kafka2Grpc => {
                 let config = config.kafka2grpc.ok_or_else(|| {
                     anyhow::anyhow!("`kafka2grpc` section in config should be defined")
                 })?;
@@ -389,23 +367,4 @@ impl ArgsAction {
 }
 
 #[tokio::main]
-async fn main() -> anyhow::Result<()> {
-    setup_tracing()?;
-
-    // Parse args
-    let args = Args::parse();
-    let config = config_load::<Config>(&args.config).await?;
-
-    // Run prometheus server
-    if let Some(address) = args.prometheus.or(config.prometheus) {
-        prometheus_run_server(address).await?;
-    }
-
-    // Create kafka config
-    let mut kafka_config = ClientConfig::new();
-    for (key, value) in config.kafka.iter() {
-        kafka_config.set(key, value);
-    }
-
-    args.action.run(config, kafka_config).await
-}
+async fn main() {}
