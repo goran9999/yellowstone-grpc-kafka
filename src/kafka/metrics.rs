@@ -1,5 +1,5 @@
 use {
-    crate::metrics::GprcMessageKind,
+    crate::grpc_metrics::GprcMessageKind,
     prometheus::{GaugeVec, IntCounter, IntCounterVec, Opts},
     rdkafka::{
         client::{ClientContext, DefaultClientContext},
