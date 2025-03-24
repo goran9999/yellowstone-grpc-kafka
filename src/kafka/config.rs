@@ -5,7 +5,7 @@ use {
     std::{collections::HashMap, net::SocketAddr},
 };
 
-#[derive(Debug, Default, Deserialize)]
+#[derive(Debug, Default, Clone, Deserialize)]
 #[serde(default)]
 pub struct Config {
     pub prometheus: Option<SocketAddr>,
@@ -15,7 +15,7 @@ pub struct Config {
     pub kafka2grpc: Option<ConfigKafka2Grpc>,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, Clone)]
 pub struct ConfigDedup {
     #[serde(default)]
     pub kafka: HashMap<String, String>,
@@ -29,7 +29,7 @@ pub struct ConfigDedup {
     pub backend: ConfigDedupBackend,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, Clone)]
 #[serde(tag = "type", rename_all = "lowercase")]
 pub enum ConfigDedupBackend {
     Memory,
@@ -43,7 +43,7 @@ impl ConfigDedupBackend {
     }
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, Clone)]
 pub struct ConfigGrpc2Kafka {
     pub endpoint: String,
     pub x_token: Option<String>,
@@ -64,7 +64,7 @@ impl ConfigGrpc2Kafka {
     }
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, Clone)]
 pub struct ConfigKafka2Grpc {
     #[serde(default)]
     pub kafka: HashMap<String, String>,
