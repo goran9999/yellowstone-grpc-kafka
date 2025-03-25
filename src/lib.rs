@@ -79,7 +79,7 @@ impl GrpcKafka {
         config: ConfigDedup,
         mut shutdown: BoxFuture<'static, ()>,
     ) -> anyhow::Result<()> {
-        for (key, value) in config.kafka.into_iter() {
+        for (key, value) in config.kafka.clone().into_iter() {
             kafka_config.set(key, value);
         }
 
@@ -98,7 +98,7 @@ impl GrpcKafka {
         tokio::pin!(kafka_error_rx);
 
         // dedup
-        let dedup = config.backend.create().await?;
+        let dedup = config.backend.create(&config).await?;
 
         // input -> output loop
         let kafka_output = Arc::new(config.kafka_output);
