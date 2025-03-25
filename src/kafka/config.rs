@@ -1,5 +1,5 @@
 use {
-    super::dedup::{KafkaDedup, KafkaDedupMemory},
+    super::dedup::{KafkaDedup, KafkaDedupMemory, KafkaDedupRedis},
     crate::config::{deserialize_usize_str, ConfigGrpcRequest},
     serde::Deserialize,
     std::{collections::HashMap, net::SocketAddr},
@@ -26,6 +26,7 @@ pub struct ConfigDedup {
         deserialize_with = "deserialize_usize_str"
     )]
     pub kafka_queue_size: usize,
+    pub redis_url: Option<String>,
     pub backend: ConfigDedupBackend,
 }
 
@@ -33,12 +34,27 @@ pub struct ConfigDedup {
 #[serde(tag = "type", rename_all = "lowercase")]
 pub enum ConfigDedupBackend {
     Memory,
+    Redis,
+}
+
+#[derive(Clone)]
+pub enum KafkaDedupImpl {
+    Memory(KafkaDedupMemory),
+    Redis(KafkaDedupRedis),
 }
 
 impl ConfigDedupBackend {
-    pub async fn create(&self) -> anyhow::Result<Box<impl KafkaDedup>> {
+    pub async fn create(&self, config: &ConfigDedup) -> anyhow::Result<Box<impl KafkaDedup>> {
         Ok(match self {
-            Self::Memory => Box::<KafkaDedupMemory>::default(),
+            Self::Memory => Box::new(KafkaDedupImpl::Memory(KafkaDedupMemory::default())),
+            Self::Redis => {
+                let redis_url = config
+                    .redis_url
+                    .as_ref()
+                    .ok_or_else(|| anyhow::anyhow!("missing redis url for 'Redis' dedup type!"))?;
+
+                Box::new(KafkaDedupImpl::Redis(KafkaDedupRedis::new(redis_url)?))
+            }
         })
     }
 }
